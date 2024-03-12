@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPIO Control</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Include Bootstrap CSS -->
+    <link href="/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Include Bootstrap JavaScript -->
+    <script src="/bootstrap.bundle.min.js"></script>
+    
+    <style>
+        #console-messages {
+        max-height: 150px; /* Adjust the height as needed */
+        overflow-y: auto; /* Add vertical scrollbar */
+        padding: 0; /* Remove default padding */
+        list-style-type: none; /* Remove bullet points */
+    }
+    </style>
+
+    
+</head>
+
+<body>
+    
+    <h2>Raspberry PI 3 B+ GPIO ON/OFF Control</h2>
+
+    <br>
+
+    <div class="date_time">
+    <h5>Date and Time</h5>
+    Date: <span id="date"></span>
+    Time: <span id="time"></span>
+    </div> 
+   
+    <br>
+
+    <h5>GPIO Status Updates</h5>
+    <ul id="console-messages"></ul>
+    <button id="refresh-btn">REFRESH</button>
+    <button id="vizualizare-btn">VIZUALIZARE</button>
+
+    <select id="gpio-select">
+        <option value="">GPIOS</option>
+    	<option value="5">GPIO 5</option>
+    	<option value="6">GPIO 6</option>
+    	<option value="12">GPIO 12</option>
+    	<option value="13">GPIO 13</option>
+    	<option value="16">GPIO 16</option>
+    	<option value="17">GPIO 17</option>
+    	<option value="18">GPIO 18</option>
+    	<option value="19">GPIO 19</option>
+    	<option value="20">GPIO 20</option>
+    	<option value="21">GPIO 21</option>
+    	<option value="22">GPIO 22</option>
+    	<option value="23">GPIO 23</option>
+    	<option value="24">GPIO 24</option>
+    	<option value="25">GPIO 25</option>
+    	<option value="26">GPIO 26</option>
+    	<option value="27">GPIO 27</option>
+    </select>
+
+<br>
+
+<script>
+
+   // Function to fetch console messages from server and update UI
+    
+    function fetchConsoleMessages() {
+    fetch('http://192.168.1.10:8082/consoleMessages') // Update the URL to match your server address and port
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch console messages');
+            }
+            return response.json();
+        })
+        .then(messages => {
+            const consoleMessages = document.getElementById('console-messages');
+            // Clear previous messages
+            consoleMessages.innerHTML = '';
+            // Reverse the order of messages
+            messages.reverse();
+            // Append each message to the list
+            messages.forEach(message => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${message.dateTime} ${message.time}: ${message.message}`;
+                consoleMessages.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching console messages:', error);
+        });
+}
+    // Function to handle refresh button click
+
+    document.getElementById('refresh-btn').addEventListener('click', fetchConsoleMessages);
+
+    // Call the function to fetch and display console messages
+
+    fetchConsoleMessages();
+    
+    
+// Function to fetch console messages for the selected GPIO
+function fetchConsoleMessagesByGPIOID(gpioID) {
+    fetch(`http://192.168.1.10:8082/consoleMessages/${gpioID}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch console messages');
+            }
+            return response.json();
+        })
+        .then(messages => {
+            const consoleMessages = document.getElementById('console-messages');
+            // Clear previous messages
+            consoleMessages.innerHTML = '';
+            // Reverse the order of messages
+            messages.reverse();
+            // Append each message to the list
+            messages.forEach(message => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${message.dateTime} ${message.time}: ${message.message}`;
+                consoleMessages.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching console messages:', error);
+        });
+}
+
+// Event listener for refresh button click
+document.getElementById('refresh-btn').addEventListener('click', () => {
+    const selectedGPIO = document.getElementById('gpio-select').value;
+    fetchConsoleMessagesByGPIOID(selectedGPIO);
+});
+
+// Event listener for vizualizare button click
+document.getElementById('vizualizare-btn').addEventListener('click', () => {
+    const selectedGPIO = document.getElementById('gpio-select').value;
+    fetchConsoleMessagesByGPIOID(selectedGPIO);
+});
+
+// Call the function initially
+const selectedGPIO = document.getElementById('gpio-select').value;
+fetchConsoleMessagesByGPIOID(selectedGPIO);
+
+
+
+</script>
+
+<br>
+
+<h3>GPIO 21</h3>
+<div class="btn-group" role="group" aria-label="GPIO 21">
+    <input type="radio" class="btn-check" name="gpio21" id="gpio21-on" onclick="toggleGPIO(21, 'ON')">
+    <label class="btn btn-outline-primary" for="gpio21-on">ON</label>
+
+    <input type="radio" class="btn-check" name="gpio21" id="gpio21-off" onclick="toggleGPIO(21, 'OFF')">
+    <label class="btn btn-outline-primary" for="gpio21-off">OFF</label>
+</div>
+
+<h3>GPIO 20</h3>
+<div class="btn-group" role="group" aria-label="GPIO 20">
+    <input type="radio" class="btn-check" name="gpio20" id="gpio20-on" onclick="toggleGPIO(20, 'ON')">
+    <label class="btn btn-outline-primary" for="gpio20-on">ON</label>
+
+    <input type="radio" class="btn-check" name="gpio20" id="gpio20-off" onclick="toggleGPIO(20, 'OFF')">
+    <label class="btn btn-outline-primary" for="gpio20-off">OFF</label>
+</div>
+
+<!-- Bootstrap button-danger
+https://getbootstrap.com/docs/5.3/components/buttons/ -->
+
+<div>
+<h3>Emergency</h3>
+<button id="emergency-btn" class="btn btn-danger" onclick="toggleAllGPIOs()">Shutdown All</button>
+</div>
+
+
+
+
+<br>   
+<script>
+
+function toggleAllGPIOs() {
+    // Reset the state of all toggle buttons for GPIO 20 and GPIO 21 to off
+    document.getElementById('gpio20-off').checked = true;
+    document.getElementById('gpio21-off').checked = true;
+
+    // Update the state of GPIO 20 and GPIO 21 to OFF in the UI
+    toggleGPIO(20, 'OFF');
+    toggleGPIO(21, 'OFF');
+}
+
+function toggleGPIO(gpioId, state) {
+    // Update the UI to reflect the changes in the toggle button state
+    document.getElementById(`gpio${gpioId}-${state.toLowerCase()}`).checked = !document.getElementById(`gpio${gpioId}-${state.toLowerCase()}`).checked;
+}
+
+
+// Function to toggle GPIO and update UI
+
+   function toggleGPIO(pin, state) {
+            fetch(`http://192.168.1.10:3000/gpioStates/${pin}`, { method: 'PUT', body: JSON.stringify({ state }) })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to toggle GPIO');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.state === 'ON') {
+                        document.getElementById(`gpio${pin}-on`).checked = true;
+                        document.getElementById(`gpio${pin}-off`).checked = false;
+                    } else if (data.state === 'OFF') {
+                        document.getElementById(`gpio${pin}-on`).checked = false;
+                        document.getElementById(`gpio${pin}-off`).checked = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling GPIO:', error);
+                });
+        }
+
+// Call initializeUI to initialize UI based on GPIO state
+initializeUI(21);
+initializeUI(20);
+
+// Function to fetch GPIO state from the server and initialize UI
+
+        function initializeUI(pin) {
+            fetch(`http://192.168.1.10:3000/gpioStates/${pin}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch GPIO state');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.state === 'ON') {
+                        document.getElementById(`gpio${pin}-on`).checked = true;
+                    } else if (data.state === 'OFF') {
+                        document.getElementById(`gpio${pin}-off`).checked = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching GPIO state:', error);
+                });
+        }
+
+        // Call initializeUI for each GPIO button
+        initializeUI(21);
+        initializeUI(20);
+
+ </script>
+            
+
+        
+
+    <script>
+
+        // Function to send a POST request to toggle the specified GPIO pin
+        function toggleGPIO(pin, state) {
+            sendPOSTRequest(`/toggle-gpio/${pin}/${state}`);
+        }
+
+        // Function to send a POST request
+        function sendPOSTRequest(endpoint) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', endpoint, true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.responseText);
+                    // Handle response from server if needed
+                }
+            };
+            xhr.send();
+        }
+    </script>
+    
+ 
+
+
+
+
+
+
+   
+        <script>
+
+        
+        function updateDateTime() {
+        
+        // Get the current date and time
+
+        var now = new Date();
+
+        // Options for formatting date and time in Romanian
+
+        var options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+
+        // Format the date and time
+        
+        var dateString = now.toLocaleDateString('ro-RO', options);
+        var timeString = now.toLocaleTimeString('ro-RO');
+
+        // Update the HTML elements with the formatted date and time
+        
+        document.getElementById('date').textContent = dateString;
+        document.getElementById('time').textContent = timeString;
+        
+        }
+
+        // Update date and time initially and every second
+        
+        window.onload = function() {
+        updateDateTime();
+        setInterval(updateDateTime, 1000); // Update every second
+        
+        };
+
+        </script>
+   
+
+    </body>
+
+<footer>
+    <p>Created by <a href="https://www.linkedin.com/in/daciandedu/" target="_blank">Dacian Florin Dedu</a> with OpenAi - ChatGPT 3.5</p>
+    <p>This application is Open Source and distributed under the GNU General Public License.</p>
+</footer>
+
+
+</html>
